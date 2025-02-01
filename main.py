@@ -5,6 +5,11 @@ from langchain_openai import ChatOpenAI
 import streamlit as st
 from langchain_community.tools.tavily_search import TavilySearchResults
 
+import sqlite3
+import pysqlite3
+import sys
+sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+
 st.set_page_config(layout="wide", page_title="Agentic Q&A Tool", page_icon="🤖")
 
 load_dotenv()
