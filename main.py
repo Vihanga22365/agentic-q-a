@@ -1,7 +1,6 @@
 import getpass
 import os
 from dotenv import load_dotenv
-from crewai import Crew
 from langchain_openai import ChatOpenAI
 import streamlit as st
 from langchain_community.tools.tavily_search import TavilySearchResults
@@ -18,7 +17,6 @@ os.environ["TAVILY_API_KEY"] = os.getenv("TAVILY_API_KEY")
 
 
 
-import os
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 from langchain_community.vectorstores import FAISS
