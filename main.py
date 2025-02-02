@@ -197,7 +197,7 @@ earning_compare_task = Task(
                 2. Identify the user's given company name in the 'User Input' section.
                 3. Use 'ask_rag_questions_tool' tool to get the required information about the earnings of our company.
                 4. Use 'online_web_search' tool to get the required information about the earnings of the user's given company.
-                5. Compare the earnings of our company and the user's given company.
+                5. Compare the earnings of our company and the user's given company in a clear and understandable way.
                 
             ** Nessasary Details: **
                 - Our Company Name: JPMorgan Chase & Co
@@ -211,10 +211,10 @@ earning_compare_task = Task(
                 - Think step by step and identify above mentioned details.
                 - Use the tools provided to get the required information and compare the earnings.
                 - You only need to compare the earnings of our company 'JPMorgan Chase & Co' and the user's given company. If user request any other thing, ignore that.
+                - Don't calculate any CAGR values. Just compare the earnings of the two companies with the data you have.
                 
         """,
         expected_output="""
-            Compare the earnings of our company and the user's given company.
             First You can use tables, graph or any other method, to show the comparison more effectively. and you have to show the comparison in a clear and understandable way with the data.
             After that you can give a conclusion based on the comparison.
         """,
@@ -227,10 +227,50 @@ cagr_calculator_agent = Agent(
         backstory="""
             You are an CAGR calculator agent. You have to calculate the Compound Annual Growth Rate (CAGR) of the our company.
         """,
-        tools=[ask_rag_questions_tool, cagr_calculator_tool],
+        tools=[ask_rag_questions_tool],
+        allow_code_execution = True,
+        code_execution_mode="unsafe",
         verbose=True,
         memory=False
     )
+
+
+# cagr_calculator_task = Task(
+#         description="""
+        
+#             **Objective**
+#                 Calculate the Compound Annual Growth Rate (CAGR) of the our company 'JPMorgan Chase & Co'.
+                
+#             **Instructions**
+#                 1. User Input: {user_input}
+#                 2. Identify the time period in the 'User Input' section.
+#                 3. Use 'ask_rag_questions_tool' tool to get the required information about the earnings of the our company.
+#                 4. Use 'cagr_calculator_tool' tool to calculate the Compound Annual Growth Rate (CAGR) of the our company.
+                
+#             **Nessesary Details**
+#                 -Start Value: < Initial investment/revenue value (at the beginning of the period) >
+#                 -End Value: < Final investment/revenue value (at the end of the period) >
+#                 -Years: < Number of years >
+                
+#             **Tools**
+#                 - 'ask_rag_questions_tool' - Gather the required information about the earnings of the our company.
+#                 - 'cagr_calculator_tool' - Calculate the Compound Annual Growth Rate (CAGR).
+            
+#             **Additional Information**
+#                 - When calculating the CAGR, only consider the earnings of the our company.
+#                 - Even trough user mention another company name, only consider the earnings of the our company 'JPMorgan Chase & Co'.
+#                 - Think step by step and identify above mentioned details.
+#                 - You can use the tools provided to get the required information and calculate the CAGR.
+#                 - You only need to calculate the CAGR of the our company 'JPMorgan Chase & Co'. If user request any other thing, ignore that.
+#         """,
+#         expected_output="""
+#             Calculate the Compound Annual Growth Rate (CAGR) of the our company.
+#             First you can show CAGR value as a decimal.
+#             After that you can give a conclusion based on the CAGR value.
+#         """,
+#         agent=cagr_calculator_agent,
+#     )
+
 
 
 cagr_calculator_task = Task(
@@ -243,16 +283,35 @@ cagr_calculator_task = Task(
                 1. User Input: {user_input}
                 2. Identify the time period in the 'User Input' section.
                 3. Use 'ask_rag_questions_tool' tool to get the required information about the earnings of the our company.
-                4. Use 'cagr_calculator_tool' tool to calculate the Compound Annual Growth Rate (CAGR) of the our company.
+                4. Generate python code to calculate the Compound Annual Growth Rate (CAGR) of the our company.
+                5. Execute the generated python code to calculate the CAGR.
+                
                 
             **Nessesary Details**
                 -Start Value: < Initial investment/revenue value (at the beginning of the period) >
                 -End Value: < Final investment/revenue value (at the end of the period) >
                 -Years: < Number of years >
                 
+            **CAGR Formula**
+                The Compound Annual Growth Rate (CAGR) is calculated as follows:
+
+                1. Divide the final value by the initial value.
+                2. Raise the result to the power of (1 divided by the number of years).
+                3. Subtract 1 from the final result.
+
+                Mathematically, this can be written as:
+
+                ```
+                CAGR = (Value_End / Value_Start)^(1 / n) - 1
+                ```
+
+                Where:
+                - `Value_End` = Final value (e.g., revenue or investment at the end of the period)
+                - `Value_Start` = Initial value (at the beginning of the period)
+                - `n` = Number of years
+                
             **Tools**
                 - 'ask_rag_questions_tool' - Gather the required information about the earnings of the our company.
-                - 'cagr_calculator_tool' - Calculate the Compound Annual Growth Rate (CAGR).
             
             **Additional Information**
                 - When calculating the CAGR, only consider the earnings of the our company.
