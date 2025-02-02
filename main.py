@@ -10,7 +10,7 @@ import pysqlite3
 import sys
 sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 
-st.set_page_config(layout="wide", page_title="Agentic Q&A Tool", page_icon="🤖")
+st.set_page_config(layout="wide", page_title="Agentic OmniTask AI", page_icon="🤖")
 
 load_dotenv()
 
@@ -43,8 +43,8 @@ def format_docs(docs):
   format_D="\n\n".join([d.page_content for d in docs])
   return format_D
 
-@tool("ask_rag_questions_tool")
-def ask_rag_questions_tool(question: str) -> str:
+@tool("rag_inquiry_handler_tool")
+def rag_inquiry_handler_tool(question: str) -> str:
     """
       Ask a question using the RAG.
       User can ask a question about our company and get the answer from the RAG.
@@ -104,7 +104,25 @@ def cagr_calculator_tool(value_end: float, value_start: float, years: int) -> fl
     cagr = (value_end / value_start) ** (1 / years) - 1
     return round(cagr, 6)  # Returning CAGR rounded to 6 decimal places
 
+import io
+import sys
 
+@tool
+def code_interpreter_tool(code: str) -> str:
+    """
+    Executes the provided Python code and returns the output.
+    """
+    # Define a restricted execution environment
+    restricted_globals = {"__builtins__": {}}
+    restricted_locals = {}
+
+    try:
+        # Execute the code within the restricted environment
+        exec(code, restricted_globals, restricted_locals)
+        return str(restricted_locals)
+    except Exception as e:
+        return f"Error: {e}"
+    
 # @tool("online_web_search")
 # def online_web_search(search_query: str):
 #     """
@@ -133,7 +151,7 @@ report_generator_agent = Agent(
         backstory="""
             You are a report generator. You have to generate a report.
         """,
-        tools=[ask_rag_questions_tool],
+        tools=[rag_inquiry_handler_tool],
         verbose=True,
         memory=False
     )
@@ -148,7 +166,7 @@ report_generator_task = Task(
             ** Instructions: **
                 1. User Input: {user_input}
                 2. Identify the report type user is requesting. ignore the other details in the user input.
-                3. Use 'ask_rag_questions_tool' tool to get the required information section by section abouth only our company.
+                3. Use 'rag_inquiry_handler_tool' tool to get the required information section by section abouth only our company.
                 4. Combine all the information and generate the requested report.
                 5. Make sure the report is readable, understandable and accurate.
                 
@@ -156,7 +174,7 @@ report_generator_task = Task(
                 - Report Type: < Identify the report type in the 'User Input' section. >
                 
             ** Tools: **
-                - 'ask_rag_questions_tool' - Get the required information to generate the report.
+                - 'rag_inquiry_handler_tool' - Get the required information to generate the report.
                 
             ** Additional Information: **
                 - When generating the report, only consider the details of the our company.
@@ -174,12 +192,12 @@ report_generator_task = Task(
 
 
 earning_compare_agent = Agent(
-        role='Earning Compare Agent',
+        role='Earnings Comparison Agent',
         goal='You have to compare the earnings of our company and other given company.',
         backstory="""
             You are an earning compare agent. You have to compare the earnings of our company and other given company.
         """,
-        tools=[ask_rag_questions_tool, online_web_search],
+        tools=[rag_inquiry_handler_tool, online_web_search],
         verbose=True,
         memory=False
     )
@@ -195,7 +213,7 @@ earning_compare_task = Task(
             ** Instructions: **
                 1. User Input: {user_input}
                 2. Identify the user's given company name in the 'User Input' section.
-                3. Use 'ask_rag_questions_tool' tool to get the required information about the earnings of our company.
+                3. Use 'rag_inquiry_handler_tool' tool to get the required information about the earnings of our company.
                 4. Use 'online_web_search' tool to get the required information about the earnings of the user's given company.
                 5. Compare the earnings of our company and the user's given company in a clear and understandable way.
                 
@@ -204,7 +222,7 @@ earning_compare_task = Task(
                 - User's Given Company Name: < Identify the user's given company name in the 'User Input' section. >
                 
             ** Tools: **
-                - 'ask_rag_questions_tool' - Get the required information about the earnings of our company.
+                - 'rag_inquiry_handler_tool' - Get the required information about the earnings of our company.
                 - 'online_web_search' - Get the required information about the earnings of the user's given company. If you cannot find the information, Again and again try to find the information.
                 
             ** Additional Information: **
@@ -227,9 +245,7 @@ cagr_calculator_agent = Agent(
         backstory="""
             You are an CAGR calculator agent. You have to calculate the Compound Annual Growth Rate (CAGR) of the our company.
         """,
-        tools=[ask_rag_questions_tool],
-        allow_code_execution = True,
-        code_execution_mode="unsafe",
+        tools=[rag_inquiry_handler_tool, code_interpreter_tool],
         verbose=True,
         memory=False
     )
@@ -244,7 +260,7 @@ cagr_calculator_agent = Agent(
 #             **Instructions**
 #                 1. User Input: {user_input}
 #                 2. Identify the time period in the 'User Input' section.
-#                 3. Use 'ask_rag_questions_tool' tool to get the required information about the earnings of the our company.
+#                 3. Use 'rag_inquiry_handler_tool' tool to get the required information about the earnings of the our company.
 #                 4. Use 'cagr_calculator_tool' tool to calculate the Compound Annual Growth Rate (CAGR) of the our company.
                 
 #             **Nessesary Details**
@@ -253,7 +269,7 @@ cagr_calculator_agent = Agent(
 #                 -Years: < Number of years >
                 
 #             **Tools**
-#                 - 'ask_rag_questions_tool' - Gather the required information about the earnings of the our company.
+#                 - 'rag_inquiry_handler_tool' - Gather the required information about the earnings of the our company.
 #                 - 'cagr_calculator_tool' - Calculate the Compound Annual Growth Rate (CAGR).
             
 #             **Additional Information**
@@ -282,7 +298,7 @@ cagr_calculator_task = Task(
             **Instructions**
                 1. User Input: {user_input}
                 2. Identify the time period in the 'User Input' section.
-                3. Use 'ask_rag_questions_tool' tool to get the required information about the earnings of the our company.
+                3. Use 'rag_inquiry_handler_tool' tool to get the required information about the earnings of the our company.
                 4. Generate python code to calculate the Compound Annual Growth Rate (CAGR) of the our company.
                 5. Execute the generated python code to calculate the CAGR.
                 
@@ -311,7 +327,8 @@ cagr_calculator_task = Task(
                 - `n` = Number of years
                 
             **Tools**
-                - 'ask_rag_questions_tool' - Gather the required information about the earnings of the our company.
+                - 'rag_inquiry_handler_tool' - Gather the required information about the earnings of the our company.
+                - 'code_interpreter_tool' - Execute the generated python code to calculate the CAGR.
             
             **Additional Information**
                 - When calculating the CAGR, only consider the earnings of the our company.
@@ -319,6 +336,7 @@ cagr_calculator_task = Task(
                 - Think step by step and identify above mentioned details.
                 - You can use the tools provided to get the required information and calculate the CAGR.
                 - You only need to calculate the CAGR of the our company 'JPMorgan Chase & Co'. If user request any other thing, ignore that.
+                - Make sure that you provide CAGR python code as a function to 'code_interpreter_tool' to calculate the CAGR.
         """,
         expected_output="""
             Calculate the Compound Annual Growth Rate (CAGR) of the our company.
@@ -333,7 +351,7 @@ user_input = "Give me a report of the governance of bank, and compare erning of 
 items_crew_1 = Crew(
   agents=[report_generator_agent],
   tasks=[report_generator_task],
-  verbose=False,
+  verbose=True,
   manager_llm=llm,
   memory=False,
 )
@@ -341,7 +359,7 @@ items_crew_1 = Crew(
 items_crew_2 = Crew(
   agents=[earning_compare_agent],
   tasks=[earning_compare_task],
-  verbose=False,
+  verbose=True,
   manager_llm=llm,
   memory=False,
 )
@@ -349,7 +367,7 @@ items_crew_2 = Crew(
 items_crew_3 = Crew(
   agents=[cagr_calculator_agent],
   tasks=[cagr_calculator_task],
-  verbose=False,
+  verbose=True,
   manager_llm=llm,
   memory=False,
 )
@@ -379,14 +397,16 @@ st.markdown(
     unsafe_allow_html=True
 )
 
+st.markdown(
+    """
+    <h1 style='text-align: center; font-size: 50px;'>Agentic OmniTask AI</h1>
+    """,
+    unsafe_allow_html=True
+)
 
-
-
-# Streamlit UI
-st.title("Agentic Q&A Tool")
 user_input = st.text_input("Enter Your Question:")
 
-if st.button("Run Agents") and user_input:
+if st.button("Run") and user_input:
     with st.spinner("Executing Agents..."):
         result1 = items_crew_1.kickoff(inputs={"user_input": user_input})
         with st.container():
